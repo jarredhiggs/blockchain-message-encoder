@@ -33,6 +33,7 @@ def get_addresses_from_chunks(data, chunk_size, testnet = False):
         # is greater than 20, then a valid bitcoin address will not be formed.
         messagedata = hex_index + str(data[index]).encode()
 
+        # Below steps are for creating Base58Check encoding
         # Add version byte in front of RIPEMD-160 hash
         # 0x00 for main net
         # 0x6F for test net

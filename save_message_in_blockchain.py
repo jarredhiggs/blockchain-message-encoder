@@ -1,5 +1,9 @@
+import argparse
 import base64
 import subprocess
+
+import datetime
+
 import btc_address_utility
 import json
 import base58
@@ -15,7 +19,7 @@ def send_image(messagefile, chunk_size):
     addresses = btc_address_utility.get_addresses_from_chunks(chunks, chunk_size, True)
 
     res = []
-    reqs_per_tx = 600
+    reqs_per_tx = 400
     for i in range(0, len(addresses), reqs_per_tx):
         req = {}
         for x in range(0, reqs_per_tx):
@@ -55,12 +59,29 @@ def retrieve_image(tx_ids, chunk_size, address_list = None):
 
 
 if __name__ == '__main__':
-    with open(r"input.jpeg", "rb") as f:
-        file = f.read()
-        send_res = send_image(file, 16)
+    arg_parser = argparse.ArgumentParser()
 
-    image = retrieve_image('tx_id placeholder', 16, json.loads(send_res)['encoded_addresses'])
+    # Encode and send image or retrieve from address?
+    action = arg_parser.add_mutually_exclusive_group(required=False)
+    action.add_argument('-s', '--send', help="Send an encoded file to the blockchain", action="store_true")
+    action.add_argument('-r', '--retrieve', help="Retrieve an encoded file from the blockchain", action="store_true")
+
+    # Input file or output file for operation
+    filearg = arg_parser.add_mutually_exclusive_group(required=False)
+    filearg.add_argument("-i", "--infile", help="The file to encode into blockchain addresses, if applicable.", action="store", nargs="?")
+    filearg.add_argument("-o", "--outfile", help="The location to save the retrieved image, if applicable.", action="store", nargs="?")
+
+    args = arg_parser.parse_args()
+    infile = args.infile or 'input.jpeg'
+
+    print(infile)
+
+    with open(infile, "rb") as f:
+        file = f.read()
+        send_res = send_image(file, 14)
+
+    image = retrieve_image('tx_id placeholder', 14, json.loads(send_res)['encoded_addresses'])
 
     file_extension = imghdr.what("", image)
-    with open("image." + file_extension, "wb") as outfile:
+    with open("image" + datetime.datetime.now().strftime('%Y-%m-%d_%Hh-%Mm-%Ss') + "." + file_extension, "wb") as outfile:
         outfile.write(image)
